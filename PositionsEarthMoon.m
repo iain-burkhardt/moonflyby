@@ -72,7 +72,3 @@ fprintf('Distance from Earth center: %.2f km\n', ...
     distanceKm);
 
 end
-
-
-disp(PositionFetch('301', '500@399', '2027-01-01', '2027-01-02', '1h'));
-disp(MoonDistance('2027-01-01', '12:00'))
