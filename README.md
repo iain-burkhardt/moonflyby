@@ -8,3 +8,11 @@ Final project for MCEN 1030 by Anthony Deluca, Iain Burkhardt, and Gabe Dozois
   2. Translunar Injection: Burn that puts the spacecraft on a path to intercept the moon
   3. Lunar Flyby: Pass the Moon at the target altitude; its gravity bends the path home
   4. Earth Return: Coast back and hit the target perigree within the time limit.
+ 
+## Inputs
+
+## Outputs
+
+## Figures
+
+## Validation
