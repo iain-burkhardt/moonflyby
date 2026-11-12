@@ -34,3 +34,14 @@ Final project for MCEN 1030 by Anthony Deluca, Iain Burkhardt, and Gabe Dozois
 - Animation (The flight path played out over time)
 
 ## Validation
+- We need to validate our information with a sanity check.  Our sanity check is comparing our data gathered to the data of Artemis II's launch date, orbit, and targets, then compare against NASA's path:
+  1. Total time of flight
+  2. Lunar flyby altitude
+  3. Return pedigree
+  4. Overall path shape
+- However there are some likely sources of error which include:
+  1. Simplified gravity model vs. full n-body
+  2. Instant burns vs. finite-length burns
+  3. Ephemeris accuracy and time-step size
+  4. Ignored effects: Earth oblateness, solar gravity, radiation pressure
+  5. No mid-course corrections
