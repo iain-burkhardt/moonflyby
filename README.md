@@ -26,5 +26,11 @@ Final project for MCEN 1030 by Anthony Deluca, Iain Burkhardt, and Gabe Dozois
   3. Return Pedigree, altitude in km and time in days & hours
      
 ## Figures
+- We have planned different figures to represent the multiple aspects that come with rocket trajectories.  These figures include:
+- Inertial Trejectory (Full path in the earth-centered inertial frame)
+- Rotating-frame trajectory (Earth-moon rotating frame - shows the figure eight flight path)
+- Distance from Earth (range vs. time for the whole mission)
+- Lunar altitude (Height above the Moon vs. time, zoomed on the flyby)
+- Animation (The flight path played out over time)
 
 ## Validation
