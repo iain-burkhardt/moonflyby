@@ -1,6 +1,9 @@
 
 function AnimateEarthMoon()
 
+close all;
+clc;
+
 %% 1. Settings
 
 tStart = '2027-01-01 00:00:00';
@@ -23,16 +26,12 @@ MoonEarth = PositionFetch('301', '500@399', ...
 
 %% 3. Extract coordinates
 
-% Convert kilometers to astronomical units
 AU = 149597870.7;
 
 earth = EarthSun.Position_km(:,1:2) / AU;
 moon = MoonSun.Position_km(:,1:2) / AU;
-
-% Moon position relative to Earth (km)
 lunar = MoonEarth.Position_km(:,1:2);
 
-% Dates
 dates = datetime(EarthSun.JD, ...
     'ConvertFrom', 'juliandate');
 
@@ -45,124 +44,203 @@ moon = moon(1:N,:);
 lunar = lunar(1:N,:);
 dates = dates(1:N);
 
-%% 4. Create figure
+%% 4. Figure setup
 
-fig = figure('Name', 'Earth-Moon Orbital Animation', ...
-    'Color', 'w', ...
-    'Position', [100 100 1200 600]);
+fig = figure('Name', 'Earth-Moon Animation', ...
+    'Color', [0.035 0.045 0.08], ...
+    'Position', [100 100 1450 700]);
 
-% Video settings
-video = VideoWriter('EarthMoonAnimation.avi', 'Motion JPEG AVI');
+video = VideoWriter('EarthMoonAnimation.avi', ...
+    'Motion JPEG AVI');
+
 video.FrameRate = 30;
+
+% Ensure video is closed if an error occurs
 open(video);
+videoCleanup = onCleanup(@() close(video));
 
-%% 5. Left plot: Solar system
+%% 5. Colors
 
-subplot(1,2,1);
+bg = [0.035 0.045 0.08];
+white = [0.9 0.92 0.96];
+gray = [0.35 0.4 0.48];
 
-hold on;
-grid on;
-axis equal;
+earthColor = [0.15 0.48 1.0];
+moonColor = [0.85 0.88 0.94];
+lunarOrbitColor = [0.95 0.65 0.25];
 
-% Full orbital paths
-plot(earth(:,1), earth(:,2), ...
-    'Color', [0.8 0.8 0.8]);
+%% 6. Left plot: Earth and Moon around Sun
 
-plot(moon(:,1), moon(:,2), ...
-    'Color', [0.8 0.8 0.8]);
+ax1 = subplot(1,2,1);
+
+hold(ax1, 'on');
+grid(ax1, 'on');
+axis(ax1, 'equal');
+
+set(ax1, ...
+    'Color', bg, ...
+    'XColor', white, ...
+    'YColor', white, ...
+    'GridColor', gray, ...
+    'GridAlpha', 0.25);
+
+% Earth orbital path
+hEarthOrbit = plot(ax1, earth(:,1), earth(:,2), ...
+    '-', 'Color', [0.2 0.45 0.85], ...
+    'LineWidth', 1.5);
+
+% Moon orbital path around Sun
+hMoonOrbit = plot(ax1, moon(:,1), moon(:,2), ...
+    '-', 'Color', [0.55 0.55 0.65], ...
+    'LineWidth', 1);
 
 % Sun
-plot(0, 0, 'yo', ...
-    'MarkerSize', 14, ...
-    'MarkerFaceColor', 'y');
+hSun = plot(ax1, 0, 0, 'o', ...
+    'MarkerSize', 20, ...
+    'MarkerFaceColor', [1 0.8 0.1], ...
+    'MarkerEdgeColor', [1 0.95 0.5]);
 
-% Moving objects
-hEarth = plot(earth(1,1), earth(1,2), ...
-    'bo', 'MarkerSize', 9, ...
-    'MarkerFaceColor', 'b');
-
-hMoon = plot(moon(1,1), moon(1,2), ...
-    'ko', 'MarkerSize', 6, ...
-    'MarkerFaceColor', 'k');
-
-xlabel('X (AU)');
-ylabel('Y (AU)');
-title('Earth and Moon Around Sun');
-
-legend('Earth orbit', 'Moon orbit', ...
-    'Sun', 'Earth', 'Moon');
-
-% Fixed axis limits
-margin = 0.2;
-xlim([min(earth(:,1))-margin, max(earth(:,1))+margin]);
-ylim([min(earth(:,2))-margin, max(earth(:,2))+margin]);
-
-%% 6. Right plot: Earth-Moon system
-
-subplot(1,2,2);
-
-hold on;
-grid on;
-axis equal;
-
-% Moon's orbital path
-plot(lunar(:,1), lunar(:,2), ...
-    'Color', [0.8 0.8 0.8]);
-
-% Earth at origin
-plot(0, 0, 'bo', ...
-    'MarkerSize', 12, ...
-    'MarkerFaceColor', 'b');
+% Moving Earth
+hEarth = plot(ax1, earth(1,1), earth(1,2), ...
+    'o', 'MarkerSize', 13, ...
+    'MarkerFaceColor', earthColor, ...
+    'MarkerEdgeColor', 'w', ...
+    'LineWidth', 1.2);
 
 % Moving Moon
-hLunarMoon = plot(lunar(1,1), lunar(1,2), ...
-    'ko', 'MarkerSize', 8, ...
-    'MarkerFaceColor', 'k');
+hMoon = plot(ax1, moon(1,1), moon(1,2), ...
+    'o', 'MarkerSize', 10, ...
+    'MarkerFaceColor', moonColor, ...
+    'MarkerEdgeColor', 'k', ...
+    'LineWidth', 1.2);
 
-xlabel('X (km)');
-ylabel('Y (km)');
-title('Moon Around Earth');
+xlabel(ax1, 'X (AU)', 'Color', white);
+ylabel(ax1, 'Y (AU)', 'Color', white);
 
-legend('Moon orbit', 'Earth', 'Moon');
+title(ax1, 'Earth and Moon Around Sun', ...
+    'Color', white, 'FontSize', 14);
 
-axisLimit = max(abs(lunar(:))) * 1.2;
-xlim([-axisLimit axisLimit]);
-ylim([-axisLimit axisLimit]);
+legend(ax1, ...
+    [hEarthOrbit, hMoonOrbit, hSun, hEarth, hMoon], ...
+    {'Earth orbit', 'Moon orbit', 'Sun', 'Earth', 'Moon'}, ...
+    'TextColor', white, ...
+    'Color', bg, ...
+    'EdgeColor', gray, ...
+    'Location', 'southoutside');
 
-%% 7. Animation loop
+margin = 0.2;
+
+xlim(ax1, [min(earth(:,1))-margin, ...
+    max(earth(:,1))+margin]);
+
+ylim(ax1, [min(earth(:,2))-margin, ...
+    max(earth(:,2))+margin]);
+
+%% 7. Right plot: Earth-Moon system
+
+ax2 = subplot(1,2,2);
+
+hold(ax2, 'on');
+grid(ax2, 'on');
+axis(ax2, 'equal');
+
+set(ax2, ...
+    'Color', bg, ...
+    'XColor', white, ...
+    'YColor', white, ...
+    'GridColor', gray, ...
+    'GridAlpha', 0.25);
+
+% Moon orbital trail (starts empty)
+hTrail = plot(ax2, NaN, NaN, ...
+    '-', 'Color', lunarOrbitColor, ...
+    'LineWidth', 2);
+
+% Earth at origin
+hEarth2 = plot(ax2, 0, 0, 'o', ...
+    'MarkerSize', 28, ...
+    'MarkerFaceColor', earthColor, ...
+    'MarkerEdgeColor', 'w', ...
+    'LineWidth', 1.5);
+
+% Earth label
+text(ax2, 0, 0, '  Earth', ...
+    'Color', white, ...
+    'FontSize', 11, ...
+    'FontWeight', 'bold');
+
+% Moving Moon
+hLunarMoon = plot(ax2, lunar(1,1), lunar(1,2), ...
+    'o', 'MarkerSize', 15, ...
+    'MarkerFaceColor', moonColor, ...
+    'MarkerEdgeColor', 'w', ...
+    'LineWidth', 1.5);
+
+xlabel(ax2, 'X (km)', 'Color', white);
+ylabel(ax2, 'Y (km)', 'Color', white);
+
+title(ax2, 'Moon Around Earth (Expanded View)', ...
+    'Color', white, 'FontSize', 14);
+
+legend(ax2, ...
+    [hTrail, hEarth2, hLunarMoon], ...
+    {'Moon orbital trail', 'Earth', 'Moon'}, ...
+    'TextColor', white, ...
+    'Color', bg, ...
+    'EdgeColor', gray, ...
+    'Location', 'southoutside');
+
+axisLimit = max(abs(lunar(:))) * 1.35;
+
+xlim(ax2, [-axisLimit axisLimit]);
+ylim(ax2, [-axisLimit axisLimit]);
+
+%% 8. Animation
+
+disp('Starting animation...');
 
 for k = 1:N
 
-    % Update positions
+    % Update Earth around Sun
     set(hEarth, ...
         'XData', earth(k,1), ...
         'YData', earth(k,2));
 
+    % Update Moon around Sun
     set(hMoon, ...
         'XData', moon(k,1), ...
         'YData', moon(k,2));
 
+    % Update Moon around Earth
     set(hLunarMoon, ...
         'XData', lunar(k,1), ...
         'YData', lunar(k,2));
 
+    % Gradually draw Moon's orbital trail
+    set(hTrail, ...
+        'XData', lunar(1:k,1), ...
+        'YData', lunar(1:k,2));
+
     % Update date
     sgtitle(['Earth-Moon System: ', ...
-        char(datestr(dates(k), 'dd mmm yyyy'))]);
+        datestr(dates(k), 'dd mmm yyyy')], ...
+        'Color', white, ...
+        'FontSize', 17, ...
+        'FontWeight', 'bold');
 
     % Render frame
     drawnow;
 
-    % Save frame
+    % Save video frame
     writeVideo(video, getframe(fig));
 
 end
 
-%% 8. Finish
+%% 9. Finish
 
 close(video);
 
 disp('Animation complete!');
-disp('Saved as EarthMoonAnimation.mp4');
+disp('Saved as EarthMoonAnimation.avi');
 
 end
