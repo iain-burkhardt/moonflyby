@@ -144,19 +144,32 @@ function result = MoonFlyby(startDate)
     [vLambert,~] = lambertUV(r0,targetAtFlyby,tFlyby,muE);
 
     % ------------------- Three-body targeting correction ---------------
-    % Adjust the departure velocity so the integrated three-body
-    % trajectory reaches the chosen flyby aim point at nominalTOFdays.
-    % The regularization discourages unnecessarily large corrections.
+    % ------------------- Three-body targeting correction ---------------
     fprintf("Correcting departure velocity with three-body dynamics...\n");
 
-    opt = optimset("Display","iter","MaxIter",100, ...
-        "MaxFunEvals",350,"TolX",1e-7,"TolFun",1e-8);
+    % Use a scaled velocity correction so the optimizer works with
+    % dimensionless variables rather than very small km/s values.
+    velocityScale = 0.01; % km/s per optimization unit
 
-    objective = @(dv) targetingCost(dv,vLambert,r0,targetAtFlyby, ...
+    opt = optimset("Display","iter", ...
+        "MaxIter",1000, ...
+        "MaxFunEvals",5000, ...
+        "TolX",1e-9, ...
+        "TolFun",1e-9);
+
+    objective = @(x) targetingCost( ...
+        velocityScale*x(:),vLambert,r0,targetAtFlyby, ...
         tFlyby,ephem,muE,muM,muS);
 
-    deltaVCorrection = fminsearch(objective,[0;0;0],opt);
+    xCorrection = fminsearch(objective,[0;0;0],opt);
+
+    deltaVCorrection = velocityScale*xCorrection(:);
     vInitial = vLambert + deltaVCorrection;
+
+    fprintf("Final targeting cost: %.6e\n", ...
+        objective(xCorrection));
+    fprintf("Velocity correction magnitude: %.6f km/s\n", ...
+        norm(deltaVCorrection));
 
     % ---------------------- Full trajectory propagation ----------------
     y0 = [r0;vInitial];
@@ -238,6 +251,7 @@ function result = MoonFlyby(startDate)
     % ------------------------------ Plot --------------------------------
     figure("Name","Earth-Moon Flyby","Color","w");
     hold on;
+    set(gca,"Color","w");
     grid on;
     axis equal;
 
@@ -267,7 +281,7 @@ function result = MoonFlyby(startDate)
     title("Earth-centred spacecraft trajectory");
     legend("Spacecraft","Moon orbit","Earth","Departure", ...
         "Final spacecraft position","Moon at closest approach", ...
-        "Spacecraft at closest lunar approach","Earth", ...
+        "Spacecraft at closest lunar approach", ...
         "Location","bestoutside");
     view(3);
     hold off;
