@@ -69,8 +69,11 @@ function result = MoonFlyby(startDate)
     tStop = char(string(endTime,"yyyy-MM-dd HH:mm:ss"));
 
     fprintf("Fetching JPL Horizons ephemerides...\n");
-    moon = PositionFetch("301","500@399",tStart,tStop,"1 h");
-    sun  = PositionFetch("10","500@399",tStart,tStop,"1 h");
+    
+    stepSize = num2str(round(totalDays * 24));
+
+    moon = PositionFetch("301","500@399",tStart,tStop,stepSize);
+    sun  = PositionFetch("10","500@399",tStart,tStop,stepSize);
 
     if height(moon) < 3 || height(sun) < 3
         error("Horizons returned too few ephemeris samples.");
